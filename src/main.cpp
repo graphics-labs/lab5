@@ -3,6 +3,7 @@
 #include <GL/glut.h>
 #include <math.h>
 #include <string.h>
+#include <stb_image.h>
 
 #define WINDOW_HEIGHT 800
 #define WINDOW_WIDTH 2 * WINDOW_HEIGHT
@@ -30,6 +31,7 @@ double getZEye();
 
 void setCameraPosition();
 void OnKeyboard(int, int, int);
+unsigned int createTexture(const char way[]);
 
 int main(int argc, char **argv)
 {
@@ -226,4 +228,23 @@ void display()
 
   Task1();
   Task2();
+}
+
+unsigned int createTexture(const char way[])
+{
+  unsigned int texture;
+
+  glGenTextures(1, &texture);
+  glBindTexture(GL_TEXTURE_2D, texture);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  int width, height, nrChannels;
+  unsigned char *data = stbi_load(way, &width, &height, &nrChannels, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+  return texture;
 }
