@@ -3,10 +3,12 @@
 #include <GL/glut.h>
 #include <math.h>
 #include <string.h>
-#include <stb_image.h>
+#include <SOIL/SOIL.h>
 
 #define WINDOW_HEIGHT 800
 #define WINDOW_WIDTH 2 * WINDOW_HEIGHT
+
+GLuint TEXTURE;
 
 double RADIUS = 10;
 double YZ_ANGLE = M_PI / 4;
@@ -14,8 +16,6 @@ double ZX_ANGLE = M_PI / 6;
 
 GLfloat VERTICES[][3] = {
     {-1.0, -1.0, -1.0}, {1.0, -1.0, -1.0}, {1.0, 1.0, -1.0}, {-1.0, 1.0, -1.0}, {-1.0, -1.0, 1.0}, {1.0, -1.0, 1.0}, {1.0, 1.0, 1.0}, {-1.0, 1.0, 1.0}};
-
-GLfloat COLORS[][3] = {{0.78, 0.12, 0.0}, {0.5, 0.3, 0.2}, {1.0, 0.23, 0.3}, {0.4, 0.3, 0.7}, {0.79, 0.4, 1.0}, {0.0, 0.5, 0.9}};
 
 void init();
 void resize(int, int);
@@ -31,7 +31,7 @@ double getZEye();
 
 void setCameraPosition();
 void OnKeyboard(int, int, int);
-unsigned int createTexture(const char way[]);
+void createTexture(const char way[]);
 
 int main(int argc, char **argv)
 {
@@ -61,6 +61,8 @@ void init()
   glShadeModel(GL_FLAT);
   glClearColor(0.0, 0.0, 0.0, 0.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  createTexture("texture.png");
 }
 
 void resize(int width, int height) {}
@@ -128,19 +130,25 @@ void OnKeyboard(int key, int x, int y)
 
 void polygon(int a, int b, int c, int d, int color)
 {
-  glColor3fv(COLORS[color]);
-
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, TEXTURE);
   glBegin(GL_POLYGON);
 
+  glTexCoord2f(0.0,1.0);
   glVertex3fv(VERTICES[a]);
 
+  glTexCoord2f(0.0,0.0);
   glVertex3fv(VERTICES[b]);
 
+  glTexCoord2f(1.0,0.0);
   glVertex3fv(VERTICES[c]);
 
+  glTexCoord2f(1.0,1.0);
   glVertex3fv(VERTICES[d]);
 
   glEnd();
+  glBindTexture(GL_TEXTURE_2D, 0);
+  glDisable(GL_TEXTURE_2D);
 }
 
 void colorcube()
@@ -230,12 +238,10 @@ void display()
   Task2();
 }
 
-unsigned int createTexture(const char way[])
+void createTexture(const char image_src[])
 {
-  unsigned int texture;
-
-  glGenTextures(1, &texture);
-  glBindTexture(GL_TEXTURE_2D, texture);
+  glGenTextures(1, &TEXTURE);
+  glBindTexture(GL_TEXTURE_2D, TEXTURE);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -243,8 +249,10 @@ unsigned int createTexture(const char way[])
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
   int width, height, nrChannels;
-  unsigned char *data = stbi_load(way, &width, &height, &nrChannels, 0);
+  unsigned char *data = SOIL_load_image(image_src, &width, &height, 0, SOIL_LOAD_RGB);
+
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 
-  return texture;
+  SOIL_free_image_data(data);
+  glBindTexture(GL_TEXTURE_2D, 0);
 }
